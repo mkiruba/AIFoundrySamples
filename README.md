@@ -4,194 +4,177 @@ This repository contains sample code for working with Azure AI Foundry (Azure Op
 
 ## Files Overview
 
-- **`run_model.py`** - Uses Azure AD authentication (DefaultAzureCredential)
-- **`run_model_apikey.py`** - Uses API key authentication
+- **`run_model.py`** - Uses Azure AD authentication (AzureCliCredential) with hardcoded endpoint
+- **`run_model_apikey.py`** - Uses API key authentication with environment variables
 - **`requirements.txt`** - Python dependencies
-- **`setup_venv.py`** - Automated virtual environment setup script
-- **`.env`** - Environment variables configuration (create this file)
+- **`.env`** - Environment variables configuration
+- **`INSTRUCTIONS.md`** - Additional instructions
+- **`.gitignore`** - Git ignore file for Python projects
 
 ## Prerequisites
 
 - Python 3.8 or higher
 - Azure subscription with Azure OpenAI access
-- Appropriate RBAC permissions if using Azure AD authentication (see Authentication section)
-- Azure CLI installed (for Azure AD authentication)
+- For Azure AD authentication: Azure CLI installed and appropriate RBAC permissions
+- For API key authentication: Valid Azure OpenAI API key
 
-## Quick Setup (Automated)
+## Quick Setup
 
-For a quick automated setup, you can use the provided Python script:
+### 1. Create and Activate Virtual Environment
 
+**Windows:**
 ```bash
-# Run the automated setup script
-python setup_venv.py
-```
-
-This script will:
-- Create a virtual environment
-- Activate it
-- Install all dependencies
-- Provide instructions for next steps
-
-## Manual Setup Instructions
-
-### 1. Create a Virtual Environment
-
-```bash
-# Create a new virtual environment
 python -m venv .venv
-```
-
-### 2. Activate the Virtual Environment
-
-**On Windows:**
-```bash
 .venv\Scripts\activate
 ```
 
-**On macOS/Linux:**
+**macOS/Linux:**
 ```bash
+python -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install Dependencies
-
-After activating the virtual environment, install the required packages:
+### 2. Install Dependencies
 
 ```bash
-# Upgrade pip first
-python -m pip install --upgrade pip
-
-# Install all required dependencies
 pip install -r requirements.txt
 ```
 
-### 4. Verify Installation
+**Dependencies included:**
+- `openai` - Azure OpenAI Python SDK
+- `azure-identity` - Azure authentication library
+- `python-dotenv` - Environment variable management
+- `ansible-core` - Infrastructure automation (if needed)
 
-You can verify that the packages are installed correctly:
+### 3. Configure Environment Variables
 
-```bash
-pip list
-```
+Create a `.env` file in the root directory with your Azure OpenAI configuration:
 
-### Alternative: Using the install.sh Script (Linux/macOS)
-
-You can use the provided shell script for automated setup:
-
-```bash
-# Make the script executable
-chmod +x install.sh
-
-# Run the script
-./install.sh
-```
-
-## Configuration
-
-Configure the application using environment variables. Create a `.env` file in the root directory:
-
-**For API Key Authentication (run_model_apikey.py):**
 ```env
-# Azure OpenAI endpoint URL
-ENDPOINT_URL=https://your-resource-name.openai.azure.com/
+# Azure OpenAI Configuration
+AZURE_EXISTING_AIPROJECT_ENDPOINT="https://your-resource-name.cognitiveservices.azure.com/"
+AZURE_OPENAI_API_KEY="your-api-key-here"
+DEPLOYMENT_NAME="gpt-4.1-mini"
 
-# The name of your model deployment
-DEPLOYMENT_NAME=your-deployment-name
-
-# API key (required for run_model_apikey.py)
-AZURE_OPENAI_API_KEY=your-api-key
+# Azure Environment (Optional)
+AZURE_ENV_NAME="your-env-name"
+AZURE_LOCATION="your-location"
+AZURE_SUBSCRIPTION_ID="your-subscription-id"
+AZURE_EXISTING_AIPROJECT_RESOURCE_ID="your-resource-id"
 ```
 
-**For Azure AD Authentication (run_model.py):**
-The `run_model.py` file uses hardcoded values for demonstration. For production use, you should modify it to use environment variables:
-```env
-# Azure OpenAI endpoint URL
-ENDPOINT_URL=https://your-resource-name.openai.azure.com/
-
-# The name of your model deployment
-DEPLOYMENT_NAME=your-deployment-name
-```
+**Note:** The current `.env` uses specific variable names. Ensure your `.env` file matches the format above.
 
 ## Authentication Methods
 
 This repository provides two different authentication approaches:
 
-### 1. API Key Authentication (`run_model_apikey.py`)
+### 1. API Key Authentication (`run_model_apikey.py`) - **Recommended**
 
-This file uses traditional API key authentication and includes environment variable support:
+This file uses API key authentication and reads configuration from environment variables:
 
 ```bash
 python run_model_apikey.py
 ```
 
+**Features:**
+- Reads endpoint from `AZURE_EXISTING_AIPROJECT_ENDPOINT` environment variable
+- Reads deployment name from `DEPLOYMENT_NAME` environment variable  
+- Reads API key from `AZURE_OPENAI_API_KEY` environment variable
+- Includes advanced message formatting with system and user roles
+- More reliable than Azure AD authentication
+
 **Requirements:**
-- Set the `AZURE_OPENAI_API_KEY` environment variable in your `.env` file
-- Configure `ENDPOINT_URL` and `DEPLOYMENT_NAME` in your `.env` file
+- Configure your `.env` file with the required variables (see Configuration section)
+- Ensure `AZURE_OPENAI_API_KEY` is set
 
 ### 2. Azure AD Authentication (`run_model.py`)
 
-This file uses Azure CLI authentication via `AzureCliCredential`:
+This file uses Azure CLI authentication with hardcoded endpoint values:
 
 ```bash
 python run_model.py
 ```
 
-**Note:** The current version has hardcoded endpoint and deployment values for demonstration. For production use, modify the script to use environment variables.
+**Features:**
+- Uses `AzureCliCredential` for authentication
+- Hardcoded endpoint: `https://icttestaifoundry.cognitiveservices.azure.com/`
+- Hardcoded deployment: `gpt-4.1-mini`
+- Simple message structure
 
-**AzureCliCredential** requires you to be authenticated via Azure CLI:
-- You must run `az login` before using this script
-- Uses only Azure CLI credentials (more direct than DefaultAzureCredential)
-- Provides clearer error messages when authentication fails
+**Requirements:**
+- Azure CLI must be installed (`az --version` to verify)
+- Must be logged in with `az login`
+- Appropriate RBAC permissions (see below)
+
+#### Installing Azure CLI
+
+If you get "Azure CLI not found on path" error when running `run_model.py`:
+
+**Windows (Recommended):**
+```bash
+winget install Microsoft.AzureCLI
+```
+
+**macOS:**
+```bash
+brew install azure-cli
+```
+
+**Linux:**
+```bash
+curl -sL https://aka.ms/InstallAzureCli | sudo bash
+```
+
+**After installation:**
+1. Close and reopen your terminal
+2. Verify: `az --version`
+3. Login: `az login`
 
 #### Required RBAC Roles (for Azure AD Authentication)
 
-To use Azure AD authentication with `run_model.py`, you'll need one of the following roles assigned to your Azure identity:
+To use Azure AD authentication with `run_model.py`, assign one of these roles to your Azure identity:
 
-- **Cognitive Services OpenAI User** (Role ID: `5e0bd9bd-7b93-4f28-af87-19fc36ad61bd`)
+- **Cognitive Services OpenAI User** (Recommended)
+  - Role ID: `5e0bd9bd-7b93-4f28-af87-19fc36ad61bd`
   - Allows using Azure OpenAI models through an endpoint
-  - **Recommended** for most use cases
   
-- **Cognitive Services OpenAI Contributor** (Role ID: `a001fd3d-188f-4b5d-821b-7da978bf7442`)
-  - Provides full access to manage Azure OpenAI resources and use the models
-
-- **Cognitive Services User** (Role ID: `a97b65f3-24c7-4388-baec-2e87135dc908`)
-  - Allows reading and listing keys but not direct resource access
-
-#### Setting up Azure CLI Authentication
-
-For Azure AD authentication, ensure you're logged in via Azure CLI (required for `run_model.py`):
-
-```bash
-# Login to Azure CLI (required)
-az login
-
-# Verify your account
-az account show
-
-# Set specific subscription if needed
-az account set --subscription "your-subscription-id"
-```
+- **Cognitive Services OpenAI Contributor**
+  - Role ID: `a001fd3d-188f-4b5d-821b-7da978bf7442`
+  - Full access to manage Azure OpenAI resources and use models
 
 ## Running the Applications
 
-### Using API Key Authentication
+### Method 1: API Key Authentication (Recommended)
 ```bash
-# Make sure your .env file is configured with AZURE_OPENAI_API_KEY
+# Ensure your .env file is configured with all required variables
 python run_model_apikey.py
 ```
 
-### Using Azure AD Authentication  
+**Expected output:** The script will display authentication method and then show a response about Paris travel recommendations.
+
+### Method 2: Azure AD Authentication
 ```bash
-# Make sure you're logged in with Azure CLI: az login
+# Ensure Azure CLI is installed and you're logged in
+az login
 python run_model.py
 ```
 
-Both scripts will send a sample prompt about Paris travel recommendations to your Azure OpenAI deployment and display the response.
+**Expected output:** The script will display the response about Paris travel recommendations.
+
+Both scripts send the same prompt: "I am going to Paris, what should I see?" and display the AI assistant's response.
 
 ## Customizing the Code
 
-- **For `run_model_apikey.py`**: Edit the `chat_prompt` variable to customize the conversation
-- **For `run_model.py`**: Edit the `messages` parameter in the `client.chat.completions.create()` call
-- **Endpoints and deployments**: Modify the endpoint and deployment variables in the respective files
+### For `run_model_apikey.py`:
+- Edit the `chat_prompt` variable to modify the conversation
+- The script uses structured message format with system and user roles
+- Configuration is read from environment variables
+
+### For `run_model.py`:
+- Edit the `messages` parameter in the `client.chat.completions.create()` call
+- Endpoint and deployment are currently hardcoded
+- Simple message structure for basic use cases
 
 ## Troubleshooting
 
@@ -199,6 +182,122 @@ Both scripts will send a sample prompt about Paris travel recommendations to you
 
 | Error | Solution |
 |-------|----------|
+| `Azure CLI not found on path` | Install Azure CLI: `winget install Microsoft.AzureCLI` (Windows) or use `python run_model_apikey.py` |
+| `AZURE_OPENAI_API_KEY environment variable is required` | Add API key to your `.env` file |
+| `PermissionDenied` (401) with Azure AD | Assign "Cognitive Services OpenAI User" role |
+| `CredentialUnavailableError` | Run `az login` or use API key method instead |
+| Package installation failures | Activate virtual environment first |
+
+### Azure CLI Issues
+
+#### "Azure CLI not found on path" Error
+This error occurs when running `run_model.py` without Azure CLI installed:
+
+**Installation Options:**
+
+**Windows:**
+```bash
+winget install Microsoft.AzureCLI
+```
+
+**macOS:**
+```bash
+brew install azure-cli
+```
+
+**Linux:**
+```bash
+curl -sL https://aka.ms/InstallAzureCli | sudo bash
+```
+
+**Alternative Solution:**
+Use the API key version instead:
+```bash
+python run_model_apikey.py
+```
+
+### Authentication Issues
+
+#### API Key Authentication (`run_model_apikey.py`)
+- **Missing API Key**: Ensure `AZURE_OPENAI_API_KEY` is set in your `.env` file
+- **Invalid API Key**: Verify the key is correct and hasn't expired  
+- **Wrong Endpoint**: Check `AZURE_EXISTING_AIPROJECT_ENDPOINT` format in `.env`
+- **Environment File**: Ensure `.env` file is in the root directory
+
+#### Azure AD Authentication (`run_model.py`)
+- **Not Logged In**: Run `az login` to authenticate with Azure CLI
+- **Insufficient Permissions**: Verify RBAC role assignments in Azure portal
+- **Wrong Tenant**: Use `az login --tenant your-tenant-id` if needed
+- **Subscription Access**: Ensure you have access to the subscription
+
+### Environment Variables
+
+Your `.env` file should contain these variables:
+
+```env
+# Required for API key authentication
+AZURE_EXISTING_AIPROJECT_ENDPOINT="https://your-resource-name.cognitiveservices.azure.com/"
+AZURE_OPENAI_API_KEY="your-api-key-here"
+DEPLOYMENT_NAME="gpt-4.1-mini"
+
+# Optional Azure configuration
+AZURE_ENV_NAME="your-env-name"
+AZURE_LOCATION="your-location"  
+AZURE_SUBSCRIPTION_ID="your-subscription-id"
+AZURE_EXISTING_AIPROJECT_RESOURCE_ID="your-resource-id"
+```
+
+**Note:** The `run_model.py` file doesn't use environment variables - it has hardcoded values.
+If you get `CredentialUnavailableError: Azure CLI not found on path`:
+
+**Quick Fix - Use API Key Authentication Instead:**
+```bash
+# Use the API key version which doesn't require Azure CLI
+python run_model_apikey.py
+```
+
+**Or Install Azure CLI:**
+```bash
+# Use the automated installer script
+python install_azure_cli.py
+```
+
+**Manual Azure CLI Installation:**
+
+**Windows:**
+```bash
+# Using winget (recommended)
+winget install -e --id Microsoft.AzureCLI
+
+# Or download MSI installer from:
+# https://aka.ms/installazurecliwindows
+```
+
+**macOS:**
+```bash
+# Using Homebrew
+brew install azure-cli
+```
+
+**Linux (Ubuntu/Debian):**
+```bash
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+```
+
+**After installation:**
+```bash
+# Restart your terminal, then login
+az login
+
+# Verify installation
+az --version
+```
+
+### Quick Fixes for Common Issues
+
+| Error | Solution |
+|-------|----------|
+| `Azure CLI not found on path` | Install Azure CLI: `python install_azure_cli.py` or use `python run_model_apikey.py` |
 | `PermissionDenied` (401) with Azure AD | Assign "Cognitive Services OpenAI User" role - see detailed steps below |
 | `AuthenticationError` with API Key | Check your `.env` file has correct `AZURE_OPENAI_API_KEY` |
 | `CredentialUnavailableError` with Azure CLI | Run `az login` - required for run_model.py |
@@ -259,76 +358,32 @@ pip list
 - **Invalid API Key**: Verify the key is correct and hasn't expired
 - **Environment File**: Ensure `.env` file is in the root directory
 
-#### Azure AD Authentication (`run_model.py`)
-- **Not Logged In**: Run `az login` to authenticate with Azure CLI (required)
-- **Insufficient Permissions**: Verify RBAC role assignments (see Required RBAC Roles section)
-- **Wrong Tenant**: Use `az login --tenant your-tenant-id` if needed
-- **Subscription Access**: Ensure you have access to the subscription containing the OpenAI resource
-- **Authentication Test**: Run `az account get-access-token --resource https://cognitiveservices.azure.com` to verify token access
+## Additional Resources
 
-#### Common 401 Authentication Errors
-If you see a 401 error:
+- [Azure OpenAI Documentation](https://learn.microsoft.com/azure/ai-services/openai/)
+- [Azure Identity Documentation](https://learn.microsoft.com/python/api/azure-identity/)
+- [Azure CLI Installation Guide](https://learn.microsoft.com/cli/azure/install-azure-cli)
+- [Azure RBAC Documentation](https://learn.microsoft.com/azure/role-based-access-control/overview)
 
-**For API Key method:**
-1. Check your API key is correct in the `.env` file
-2. Verify your endpoint URL format: `https://your-resource-name.openai.azure.com/`
-3. Ensure your deployment name matches exactly (case-sensitive)
+## Project Structure Summary
 
-**For Azure AD method:**
-1. Run `az login` and verify authentication with `az account show`
-2. Check RBAC role assignments in the Azure portal
-3. Verify the endpoint URL and deployment name in the code
-4. Try running `az account get-access-token --resource https://cognitiveservices.azure.com` to test token acquisition
-
-### Endpoint/Deployment Issues
-
-- Verify that your endpoint URL is correct (format: `https://your-resource-name.openai.azure.com/`)
-- Confirm that the deployment name exists and is active
-- Check that your subscription has access to the specified model
-- Ensure the API version is supported by your Azure OpenAI resource
-
-### Specific Error: PermissionDenied (401)
-
-If you see this error:
 ```
-openai.AuthenticationError: Error code: 401 - {'error': {'code': 'PermissionDenied', 'message': 'The principal `{user-id}` lacks the required data action `Microsoft.CognitiveServices/accounts/OpenAI/deployments/chat/completions/action`'}}
+├── run_model.py                    # Azure AD auth (hardcoded values)
+├── run_model_apikey.py            # API key auth (env variables)
+├── requirements.txt               # Python dependencies
+├── .env                          # Environment configuration
+├── README.md                     # This file
+├── INSTRUCTIONS.md               # Additional instructions
+└── .gitignore                    # Git ignore file
 ```
 
-This means your Azure identity lacks the proper RBAC role. **Follow these steps to fix it:**
+## Next Steps
 
-#### Step 1: Identify Your Current Identity
-```bash
-# Check which account you're using
-az account show --query user.name -o tsv
-```
-
-#### Step 2: Assign the Correct RBAC Role
-You need to assign the **Cognitive Services OpenAI User** role to your identity:
-
-**Option A: Using Azure Portal**
-1. Go to your Azure OpenAI resource in the Azure Portal
-2. Click on "Access control (IAM)" in the left menu
-3. Click "+ Add" → "Add role assignment"
-4. Search for and select "Cognitive Services OpenAI User"
-5. Click "Next"
-6. Select "User, group, or service principal"
-7. Click "+ Select members"
-8. Search for and select your user account
-9. Click "Select" → "Review + assign" → "Assign"
-
-**Option B: Using Azure CLI**
-```bash
-# Get your Azure OpenAI resource ID
-az cognitiveservices account show --name "your-openai-resource-name" --resource-group "your-resource-group" --query id -o tsv
-
-# Assign the role (replace the values below)
-az role assignment create \
-  --role "Cognitive Services OpenAI User" \
-  --assignee-object-id "$(az ad signed-in-user show --query id -o tsv)" \
-  --scope "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/YOUR_RESOURCE_GROUP/providers/Microsoft.CognitiveServices/accounts/YOUR_OPENAI_RESOURCE_NAME"
-```
-
-#### Step 3: Wait and Test
+1. **Start with API key authentication** - it's more reliable and easier to set up
+2. **Configure your `.env` file** with your Azure OpenAI credentials  
+3. **Run the sample**: `python run_model_apikey.py`
+4. **Customize the prompts** to fit your use case
+5. **Consider Azure AD authentication** for production scenarios with proper RBAC
 - Role assignments can take 5-10 minutes to take effect
 - Test the connection:
 ```bash
