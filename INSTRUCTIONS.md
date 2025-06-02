@@ -6,9 +6,40 @@ The Azure AI Foundry extension provides tools to help you build, test, and deplo
 
 Follow the instructions below to get started!
 
-## Open the terminal
+## Setup Your Environment
 
-Press ``Ctrl-` `` &nbsp; to open a terminal window.
+### 1. Create a Virtual Environment
+
+First, set up a Python virtual environment with all the required dependencies:
+
+```bash
+python setup_venv.py
+```
+
+### 2. Activate the Virtual Environment
+
+```bash
+# On Windows
+.venv\Scripts\activate
+
+# On macOS/Linux
+source .venv/bin/activate
+```
+
+### 3. Configure Authentication
+
+The code supports two authentication methods:
+
+#### Option 1: API Key Authentication (Default)
+Ensure your `.env` file contains your Azure OpenAI API key:
+```
+AZURE_OPENAI_API_KEY=your-api-key-here
+ENDPOINT_URL=https://your-resource-name.openai.azure.com/
+DEPLOYMENT_NAME=your-deployment-name
+```
+
+#### Option 2: Azure AD Authentication
+If you prefer to use Azure AD authentication (managed identity, Azure CLI, etc.), you don't need to set `AZURE_OPENAI_API_KEY`. Just make sure your authenticated identity has the "Cognitive Services OpenAI User" or "Cognitive Services OpenAI Contributor" RBAC role assigned.
 
 ## Run your model locally
 
